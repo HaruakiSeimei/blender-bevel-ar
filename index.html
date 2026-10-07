@@ -1,589 +1,929 @@
 ```html
 <!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<html lang="en">
 
-    <title>Blender Bevel Tutorial - Interactive 3D WebAR</title>
+<head>
 
-    <meta
-      name="description"
-      content="Interactive WebAR Blender Bevel Tutorial with dynamic 3D Blender models"
-    >
+  <meta charset="utf-8">
 
-    <!-- A-Frame -->
-    <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+  <!-- IMPORTANT FOR ANDROID + iOS -->
+  <meta
+    name="viewport"
+    content="width=device-width,
+             initial-scale=1.0,
+             maximum-scale=1.0,
+             user-scalable=no,
+             viewport-fit=cover"
+  >
 
-    <style>
+  <title>Blender Bevel Tutorial - Interactive 3D</title>
 
-      .ui-container {
-        position: absolute;
-        bottom: 20px;
-        left: 50%;
-        transform: translateX(-50%);
+  <meta
+    name="description"
+    content="Interactive Blender Bevel Tutorial with 3D Blender models"
+  >
 
-        display: flex;
-        gap: 10px;
+  <!-- A-FRAME -->
+  <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
 
-        z-index: 999;
 
-        font-family: sans-serif;
-      }
+  <style>
+
+    /* ==========================================
+       FULL SCREEN MOBILE PAGE
+    ========================================== */
+
+    html,
+    body {
+
+      margin: 0;
+      padding: 0;
+
+      width: 100%;
+      height: 100%;
+
+      overflow: hidden;
+
+      background: #111c24;
+
+      /* Prevent mobile browser selection */
+      user-select: none;
+      -webkit-user-select: none;
+
+      /* Prevent scrolling */
+      touch-action: none;
+
+      /* iPhone safe areas */
+      padding-top: env(safe-area-inset-top);
+      padding-bottom: env(safe-area-inset-bottom);
+      padding-left: env(safe-area-inset-left);
+      padding-right: env(safe-area-inset-right);
+
+    }
+
+
+    /* ==========================================
+       A-FRAME FULL SCREEN
+    ========================================== */
+
+    a-scene {
+
+      width: 100%;
+      height: 100%;
+
+    }
+
+
+    /* ==========================================
+       INSTRUCTION
+    ========================================== */
+
+    .instruction-overlay {
+
+      position: fixed;
+
+      top: calc(
+        15px + env(safe-area-inset-top)
+      );
+
+      left: 50%;
+
+      transform: translateX(-50%);
+
+      width: max-content;
+      max-width: 85%;
+
+      background: rgba(0, 0, 0, 0.75);
+
+      color: white;
+
+      padding: 9px 15px;
+
+      border-radius: 20px;
+
+      font-family: Arial, sans-serif;
+
+      font-size: 13px;
+
+      text-align: center;
+
+      z-index: 9999;
+
+      pointer-events: none;
+
+    }
+
+
+    /* ==========================================
+       BUTTON CONTAINER
+    ========================================== */
+
+    .ui-container {
+
+      position: fixed;
+
+      bottom: calc(
+        20px + env(safe-area-inset-bottom)
+      );
+
+      left: 50%;
+
+      transform: translateX(-50%);
+
+      display: flex;
+
+      gap: 8px;
+
+      width: 95%;
+
+      max-width: 500px;
+
+      justify-content: center;
+
+      z-index: 9999;
+
+    }
+
+
+    /* ==========================================
+       BUTTONS
+    ========================================== */
+
+    .btn {
+
+      flex: 1;
+
+      min-height: 50px;
+
+      background: #2c3e50;
+
+      color: white;
+
+      border: 2px solid #34495e;
+
+      padding: 10px 8px;
+
+      font-size: 13px;
+
+      font-weight: bold;
+
+      border-radius: 10px;
+
+      cursor: pointer;
+
+      -webkit-tap-highlight-color: transparent;
+
+      touch-action: manipulation;
+
+      box-shadow:
+        0 4px 6px rgba(0, 0, 0, 0.3);
+
+      transition:
+        transform 0.1s,
+        background 0.2s;
+
+    }
+
+
+    /* Touch feedback */
+
+    .btn:active {
+
+      transform: scale(0.95);
+
+      background: #16a085;
+
+    }
+
+
+    /* Disabled while loading */
+
+    .btn.loading {
+
+      opacity: 0.5;
+
+      pointer-events: none;
+
+    }
+
+
+    /* ==========================================
+       LOADING MESSAGE
+    ========================================== */
+
+    #model-loading {
+
+      position: fixed;
+
+      top: 50%;
+
+      left: 50%;
+
+      transform: translate(
+        -50%,
+        -50%
+      );
+
+      z-index: 10000;
+
+      background: rgba(0, 0, 0, 0.85);
+
+      color: white;
+
+      padding: 15px 25px;
+
+      border-radius: 12px;
+
+      font-family: Arial, sans-serif;
+
+      font-size: 15px;
+
+      text-align: center;
+
+      display: none;
+
+    }
+
+
+    /* ==========================================
+       SMALL PHONES
+    ========================================== */
+
+    @media (max-width: 380px) {
 
       .btn {
-        background: #2c3e50;
-        color: #fff;
 
-        border: 2px solid #34495e;
+        font-size: 11px;
 
-        padding: 12px 20px;
+        padding: 8px 5px;
 
-        font-size: 14px;
-        font-weight: bold;
-
-        border-radius: 8px;
-
-        cursor: pointer;
-
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-
-        transition:
-          transform 0.1s,
-          background 0.2s;
-
-        -webkit-tap-highlight-color: transparent;
-      }
-
-      .btn:active {
-        transform: scale(0.95);
-        background: #16a085;
-      }
-
-      /* Disable buttons while a model is loading */
-
-      .btn.loading {
-        opacity: 0.5;
-        pointer-events: none;
       }
 
       .instruction-overlay {
-        position: absolute;
 
-        top: 15px;
-        left: 50%;
+        font-size: 11px;
 
-        transform: translateX(-50%);
+      }
 
-        background: rgba(0, 0, 0, 0.7);
+    }
 
+
+    /* ==========================================
+       LANDSCAPE MODE
+    ========================================== */
+
+    @media (orientation: landscape) {
+
+      .ui-container {
+
+        bottom: 15px;
+
+        max-width: 450px;
+
+      }
+
+    }
+
+  </style>
+
+</head>
+
+
+<body>
+
+
+  <!-- ==========================================
+       INSTRUCTION
+  ========================================== -->
+
+  <div
+    id="instruction"
+    class="instruction-overlay"
+  >
+
+    Tap the screen to play the video.
+    Swipe to look around.
+
+  </div>
+
+
+  <!-- ==========================================
+       LOADING
+  ========================================== -->
+
+  <div id="model-loading">
+
+    Loading 3D model...
+
+  </div>
+
+
+  <!-- ==========================================
+       BUTTONS
+  ========================================== -->
+
+  <div class="ui-container">
+
+    <button
+      id="btn-none"
+      class="btn"
+      type="button"
+      onclick="setBevel('none')"
+    >
+
+      No Bevel
+
+    </button>
+
+
+    <button
+      id="btn-low"
+      class="btn"
+      type="button"
+      onclick="setBevel('low')"
+    >
+
+      Low Bevel
+
+    </button>
+
+
+    <button
+      id="btn-high"
+      class="btn"
+      type="button"
+      onclick="setBevel('high')"
+    >
+
+      High Bevel
+
+    </button>
+
+  </div>
+
+
+
+  <!-- ==========================================
+       A-FRAME SCENE
+  ========================================== -->
+
+  <a-scene
+    renderer="
+      antialias: true;
+      colorManagement: true;
+      physicallyCorrectLights: false;
+    "
+
+    device-orientation-permission-ui="
+      enabled: true;
+    "
+
+    vr-mode-ui="
+      enabled: false;
+    "
+
+    loading-screen="
+      enabled: false;
+    "
+  >
+
+
+    <!-- ========================================
+         ASSETS
+    ========================================= -->
+
+    <a-assets>
+
+      <!-- VIDEO -->
+
+      <video
+        id="blender-video"
+
+        preload="auto"
+
+        loop
+
+        muted
+
+        playsinline
+
+        webkit-playsinline
+
+        crossorigin="anonymous"
+
+        src="Bevel Tool - Blender.mp4"
+      >
+      </video>
+
+
+      <!-- ======================================
+           BLENDER MODELS
+      ======================================= -->
+
+      <a-asset-item
+        id="model-none"
+        src="no bevel.glb"
+      >
+      </a-asset-item>
+
+
+      <a-asset-item
+        id="model-low"
+        src="low bevel.glb"
+      >
+      </a-asset-item>
+
+
+      <a-asset-item
+        id="model-high"
+        src="high bevel.glb"
+      >
+      </a-asset-item>
+
+    </a-assets>
+
+
+
+    <!-- ========================================
+         FLOOR GRID
+    ========================================= -->
+
+    <a-grid
+
+      position="0 0 0"
+
+      geometry="
+        primitive: plane;
+        width: 100;
+        height: 100;
+      "
+
+      rotation="-90 0 0"
+
+      material="
+        src: url(https://cdn.aframe.io/a-grid/grid.png);
+        repeat: 100 100;
+      "
+
+    >
+    </a-grid>
+
+
+
+    <!-- ========================================
+         SKY
+    ========================================= -->
+
+    <a-sky
+      color="#111c24"
+    >
+    </a-sky>
+
+
+
+    <!-- ========================================
+         LIGHTING
+    ========================================= -->
+
+    <a-entity
+      light="
+        type: ambient;
+        color: #777;
+        intensity: 1;
+      "
+    >
+    </a-entity>
+
+
+    <a-entity
+
+      light="
+        type: directional;
         color: #fff;
+        intensity: 0.9;
+      "
 
-        padding: 8px 15px;
+      position="-2 3 2"
 
-        border-radius: 20px;
-
-        font-family: sans-serif;
-        font-size: 13px;
-
-        text-align: center;
-
-        z-index: 999;
-
-        pointer-events: none;
-      }
-
-      /* Loading message */
-
-      #model-loading {
-        position: absolute;
-
-        top: 50%;
-        left: 50%;
-
-        transform: translate(-50%, -50%);
-
-        z-index: 1000;
-
-        background: rgba(0, 0, 0, 0.8);
-
-        color: white;
-
-        padding: 15px 25px;
-
-        border-radius: 10px;
-
-        font-family: sans-serif;
-        font-size: 15px;
-
-        display: none;
-
-        text-align: center;
-      }
-
-    </style>
-  </head>
+    >
+    </a-entity>
 
 
-  <body>
 
-    <!-- =====================================
-         INSTRUCTIONS
-    ====================================== -->
+    <!-- ========================================
+         LEFT SIDE
+         BEFORE / SHARP
+    ========================================= -->
 
-    <div class="instruction-overlay">
-      Tap screen to play video. Swipe or move phone to look around!
-    </div>
+    <a-entity
 
+      position="-2.8 1.5 -3"
 
-    <!-- =====================================
-         LOADING MESSAGE
-    ====================================== -->
+      rotation="15 45 0"
 
-    <div id="model-loading">
-      Loading 3D model...
-    </div>
+    >
 
+      <a-box
 
-    <!-- =====================================
-         BUTTONS
-    ====================================== -->
+        width="1"
 
-    <div class="ui-container">
+        height="1"
 
-      <button
-        id="btn-none"
-        class="btn"
-        onclick="setBevel('none')">
-        No Bevel
-      </button>
+        depth="1"
 
-      <button
-        id="btn-low"
-        class="btn"
-        onclick="setBevel('low')">
-        Low Bevel
-      </button>
+        color="#e74c3c"
 
-      <button
-        id="btn-high"
-        class="btn"
-        onclick="setBevel('high')">
-        High Bevel
-      </button>
-
-    </div>
-
-
-    <!-- =====================================
-         A-FRAME SCENE
-    ====================================== -->
-
-    <a-scene>
-
-      <!-- ===================================
-           ASSETS
-      ==================================== -->
-
-      <a-assets>
-
-        <!-- Video -->
-
-        <video
-          id="blender-video"
-          preload="auto"
-          loop
-          playsinline
-          webkit-playsinline
-          src="Bevel Tool - Blender.mp4">
-        </video>
-
-
-        <!-- =================================
-             PRELOAD ALL THREE GLB FILES
-        ================================== -->
-
-        <a-asset-item
-          id="model-none"
-          src="no bevel.glb">
-        </a-asset-item>
-
-        <a-asset-item
-          id="model-low"
-          src="low bevel.glb">
-        </a-asset-item>
-
-        <a-asset-item
-          id="model-high"
-          src="high bevel.glb">
-        </a-asset-item>
-
-      </a-assets>
-
-
-      <!-- ===================================
-           GRID
-      ==================================== -->
-
-      <a-grid
-        position="0 0 0"
-        geometry="
-          primitive: plane;
-          width: 100;
-          height: 100;
-        "
-        rotation="-90 0 0"
         material="
-          src: url(https://cdn.aframe.io/a-grid/grid.png);
-          repeat: 100 100;
-        ">
-      </a-grid>
-
-
-      <!-- ===================================
-           SKY
-      ==================================== -->
-
-      <a-sky color="#111c24"></a-sky>
-
-
-      <!-- ===================================
-           LIGHTING
-      ==================================== -->
-
-      <a-entity
-        light="
-          type: ambient;
-          color: #777;
-          intensity: 1;
-        ">
-      </a-entity>
-
-      <a-entity
-        light="
-          type: directional;
-          color: #fff;
-          intensity: 0.9;
+          roughness: 0.4;
         "
-        position="-2 3 2">
-      </a-entity>
+
+      >
+      </a-box>
 
 
-      <!-- ===================================
-           LEFT MODEL
-      ==================================== -->
+      <a-text
 
-      <a-entity
-        position="-2.8 1.5 -3"
-        rotation="15 45 0">
+        value="Before&#10;(Sharp)"
 
-        <a-box
-          width="1"
-          height="1"
-          depth="1"
-          color="#e74c3c"
-          material="roughness: 0.4">
-        </a-box>
+        align="center"
 
-        <a-text
-          value="Before&#10;(Sharp)"
-          align="center"
-          position="0 -0.8 0"
-          width="3"
-          color="#fff">
-        </a-text>
+        position="0 -0.8 0"
 
-      </a-entity>
-
-
-      <!-- ===================================
-           VIDEO
-      ==================================== -->
-
-      <a-video
-        src="#blender-video"
         width="3"
-        height="1.7"
-        position="0 1.5 -3"
-        rotation="0 0 0">
 
-        <a-text
-          value="Blender Tutorial: How to Bevel"
-          align="center"
-          position="0 1.1 0"
-          width="4"
-          color="#fff">
-        </a-text>
+        color="#fff"
 
-        <a-text
-          id="step-text"
-          value="Interactive: Try the buttons below!"
-          align="center"
-          position="0 -1.1 0"
-          width="3.5"
-          color="#f1c40f">
-        </a-text>
+      >
+      </a-text>
 
-      </a-video>
+    </a-entity>
 
 
-      <!-- ===================================
-           RIGHT SIDE
-           BLENDER MODEL
-      ==================================== -->
+
+    <!-- ========================================
+         CENTER VIDEO
+    ========================================= -->
+
+    <a-video
+
+      id="tutorial-video"
+
+      src="#blender-video"
+
+      width="3"
+
+      height="1.7"
+
+      position="0 1.5 -3"
+
+      rotation="0 0 0"
+
+    >
+
+      <a-text
+
+        value="Blender Tutorial: How to Bevel"
+
+        align="center"
+
+        position="0 1.1 0"
+
+        width="4"
+
+        color="#fff"
+
+      >
+      </a-text>
+
+
+      <a-text
+
+        id="step-text"
+
+        value="Interactive: Try the buttons below!"
+
+        align="center"
+
+        position="0 -1.1 0"
+
+        width="3.5"
+
+        color="#f1c40f"
+
+      >
+      </a-text>
+
+    </a-video>
+
+
+
+    <!-- ========================================
+         RIGHT SIDE
+         BLENDER MODEL
+    ========================================= -->
+
+    <a-entity
+
+      id="interactive-target"
+
+      position="2.8 1.5 -3"
+
+      rotation="15 45 0"
+
+    >
+
+
+      <!-- MODEL -->
 
       <a-entity
-        id="interactive-target"
-        position="2.8 1.5 -3"
-        rotation="15 45 0">
 
-        <!--
-          The actual GLB model is inserted
-          here by JavaScript.
-        -->
+        id="cube-mesh"
 
-        <a-entity
-          id="cube-mesh"
-          scale="1 1 1">
-        </a-entity>
+        gltf-model="#model-none"
 
+        scale="1 1 1"
 
-        <a-text
-          id="label-text"
-          value="Interactive Model&#10;(No Bevel)"
-          align="center"
-          position="0 -0.8 0"
-          width="3"
-          color="#fff">
-        </a-text>
-
+      >
       </a-entity>
 
 
-      <!-- ===================================
-           CAMERA
-      ==================================== -->
+      <!-- LABEL -->
 
-      <a-entity
-        camera
-        look-controls
-        wasd-controls
-        position="0 1.6 0">
-      </a-entity>
+      <a-text
 
-    </a-scene>
+        id="label-text"
 
+        value="Interactive Model&#10;(No Bevel)"
 
-    <!-- =====================================
-         JAVASCRIPT
-    ====================================== -->
+        align="center"
 
-    <script>
+        position="0 -0.8 0"
 
-      /* =====================================
-         MODEL INFORMATION
-      ====================================== */
+        width="3"
 
-      const models = {
+        color="#fff"
 
-        none: {
-          asset: '#model-none',
+      >
+      </a-text>
 
-          label: 'Interactive Model\n(No Bevel)',
-
-          step: 'Step 1: Raw geometry selected.'
-        },
-
-        low: {
-          asset: '#model-low',
-
-          label: 'Interactive Model\n(Low Bevel)',
-
-          step: 'Step 2: Ctrl + B applied (1 Segment).'
-        },
-
-        high: {
-          asset: '#model-high',
-
-          label: 'Interactive Model\n(High Bevel)',
-
-          step: 'Step 3: Multiple Bevel Segments.'
-        }
-
-      };
+    </a-entity>
 
 
-      /* =====================================
-         CURRENT MODEL
-      ====================================== */
 
-      let currentModel = 'none';
+    <!-- ========================================
+         CAMERA
+    ========================================= -->
 
-      let isLoading = false;
+    <a-entity
 
+      id="camera"
 
-      /* =====================================
-         ELEMENTS
-      ====================================== */
+      camera
 
-      const modelContainer =
-        document.querySelector('#cube-mesh');
+      look-controls="
+        touchEnabled: true;
+        magicWindowTrackingEnabled: true;
+      "
 
-      const labelText =
-        document.querySelector('#label-text');
+      wasd-controls="enabled: false"
 
-      const stepText =
-        document.querySelector('#step-text');
+      position="0 1.6 0"
 
-      const loadingMessage =
-        document.querySelector('#model-loading');
-
-      const buttons =
-        document.querySelectorAll('.btn');
+    >
+    </a-entity>
 
 
-      /* =====================================
-         SET BUTTON STATE
-      ====================================== */
+  </a-scene>
 
-      function setButtonsDisabled(disabled) {
 
-        buttons.forEach(function(button) {
+
+  <!-- ==========================================
+       JAVASCRIPT
+  ========================================== -->
+
+  <script>
+
+
+    /* ==========================================
+       MODEL DATA
+    ========================================== */
+
+    const models = {
+
+      none: {
+
+        asset: '#model-none',
+
+        label:
+          'Interactive Model\n(No Bevel)',
+
+        step:
+          'Step 1: Raw geometry selected.'
+
+      },
+
+
+      low: {
+
+        asset: '#model-low',
+
+        label:
+          'Interactive Model\n(Low Bevel)',
+
+        step:
+          'Step 2: Ctrl + B applied (1 Segment).'
+
+      },
+
+
+      high: {
+
+        asset: '#model-high',
+
+        label:
+          'Interactive Model\n(High Bevel)',
+
+        step:
+          'Step 3: Multiple Bevel Segments.'
+
+      }
+
+    };
+
+
+    /* ==========================================
+       VARIABLES
+    ========================================== */
+
+    let currentModel = 'none';
+
+    let isLoading = false;
+
+
+    /* ==========================================
+       ELEMENTS
+    ========================================== */
+
+    const modelContainer =
+      document.querySelector('#cube-mesh');
+
+    const labelText =
+      document.querySelector('#label-text');
+
+    const stepText =
+      document.querySelector('#step-text');
+
+    const loadingMessage =
+      document.querySelector('#model-loading');
+
+    const buttons =
+      document.querySelectorAll('.btn');
+
+
+    /* ==========================================
+       BUTTON CONTROL
+    ========================================== */
+
+    function setButtonsDisabled(disabled) {
+
+      buttons.forEach(
+        function(button) {
+
+          button.disabled = disabled;
 
           if (disabled) {
 
-            button.classList.add('loading');
-
-          } else {
-
-            button.classList.remove('loading');
+            button.classList.add(
+              'loading'
+            );
 
           }
 
-        });
+          else {
 
-      }
+            button.classList.remove(
+              'loading'
+            );
 
+          }
 
-      /* =====================================
-         SHOW LOADING
-      ====================================== */
-
-      function showLoading() {
-
-        loadingMessage.style.display = 'block';
-
-        loadingMessage.textContent =
-          'Loading 3D model...';
-
-        setButtonsDisabled(true);
-
-      }
-
-
-      /* =====================================
-         HIDE LOADING
-      ====================================== */
-
-      function hideLoading() {
-
-        loadingMessage.style.display = 'none';
-
-        setButtonsDisabled(false);
-
-      }
-
-
-      /* =====================================
-         CHANGE MODEL
-      ====================================== */
-
-      function setBevel(type) {
-
-        /*
-          Don't do anything if:
-
-          1. The requested model is already active.
-          2. Another model is currently loading.
-        */
-
-        if (type === currentModel) {
-          return;
         }
+      );
 
-        if (isLoading) {
-          return;
-        }
-
-
-        /* Check that the model exists */
-
-        if (!models[type]) {
-
-          console.error(
-            'Unknown model type:',
-            type
-          );
-
-          return;
-        }
+    }
 
 
-        isLoading = true;
+    /* ==========================================
+       SHOW LOADING
+    ========================================== */
 
-        showLoading();
+    function showLoading() {
+
+      loadingMessage.style.display =
+        'block';
+
+      loadingMessage.textContent =
+        'Loading 3D model...';
+
+      setButtonsDisabled(true);
+
+    }
 
 
-        const selectedModel =
-          models[type];
+    /* ==========================================
+       HIDE LOADING
+    ========================================== */
+
+    function hideLoading() {
+
+      loadingMessage.style.display =
+        'none';
+
+      setButtonsDisabled(false);
+
+    }
 
 
-        /*
-          Remove the old GLB.
+    /* ==========================================
+       SWITCH MODEL
+    ========================================== */
 
-          This is important because simply
-          changing gltf-model can sometimes
-          leave the old model visible while
-          the new one is loading.
-        */
+    function setBevel(type) {
 
-        modelContainer.removeAttribute(
-          'gltf-model'
+      if (!models[type]) {
+
+        console.error(
+          'Invalid model:',
+          type
         );
 
+        return;
 
-        /*
-          Wait one animation frame before
-          loading the new model.
-        */
+      }
 
-        requestAnimationFrame(function() {
 
-          /*
-            Add the new model.
-          */
+      if (type === currentModel) {
+
+        return;
+
+      }
+
+
+      if (isLoading) {
+
+        return;
+
+      }
+
+
+      isLoading = true;
+
+      showLoading();
+
+
+      const selected =
+        models[type];
+
+
+      /*
+       * Remove the previous GLB.
+       */
+
+      modelContainer.removeAttribute(
+        'gltf-model'
+      );
+
+
+      /*
+       * Give the browser a frame to
+       * remove the previous model.
+       */
+
+      requestAnimationFrame(
+        function() {
 
           modelContainer.setAttribute(
             'gltf-model',
-            selectedModel.asset
+            selected.asset
           );
 
 
           /*
-            Listen for successful loading.
-          */
+           * MODEL LOADED
+           */
 
-          modelContainer.addEventListener(
-            'model-loaded',
-            function handleModelLoaded(event) {
-
-              /*
-                Only handle this load once.
-              */
+          const onLoaded =
+            function() {
 
               modelContainer.removeEventListener(
                 'model-loaded',
-                handleModelLoaded
+                onLoaded
+              );
+
+
+              modelContainer.removeEventListener(
+                'model-error',
+                onError
               );
 
 
@@ -592,19 +932,15 @@
               isLoading = false;
 
 
-              /*
-                Update text only after the
-                new model has successfully loaded.
-              */
-
               labelText.setAttribute(
                 'value',
-                selectedModel.label
+                selected.label
               );
+
 
               stepText.setAttribute(
                 'value',
-                selectedModel.step
+                selected.step
               );
 
 
@@ -612,170 +948,263 @@
 
 
               console.log(
-                'Successfully loaded:',
+                'Loaded:',
                 type
               );
 
-            }
-          );
+            };
 
 
           /*
-            Listen for loading errors.
-          */
+           * MODEL ERROR
+           */
 
-          modelContainer.addEventListener(
-            'model-error',
-            function handleModelError(event) {
+          const onError =
+            function(error) {
+
+              modelContainer.removeEventListener(
+                'model-loaded',
+                onLoaded
+              );
+
 
               modelContainer.removeEventListener(
                 'model-error',
-                handleModelError
+                onError
               );
 
 
               isLoading = false;
 
-
               hideLoading();
 
 
-              /*
-                Show an error message.
-              */
-
-              loadingMessage.style.display =
-                'block';
-
-              loadingMessage.textContent =
-                'Error loading 3D model. Check the GLB file.';
+              alert(
+                'Unable to load the 3D model. ' +
+                'Please check your internet connection ' +
+                'and GLB file.'
+              );
 
 
               console.error(
-                'Could not load model:',
-                type,
-                event
+                'GLB error:',
+                error
               );
 
-            }
-          );
+            };
 
-        });
-
-      }
-
-
-      /* =====================================
-         INITIAL MODEL
-      ====================================== */
-
-      /*
-        Wait until A-Frame has loaded the scene
-        before loading the first Blender model.
-      */
-
-      const scene =
-        document.querySelector('a-scene');
-
-
-      scene.addEventListener(
-        'loaded',
-        function() {
-
-          console.log(
-            'A-Frame scene loaded.'
-          );
-
-
-          /*
-            Load the default model.
-          */
-
-          modelContainer.setAttribute(
-            'gltf-model',
-            '#model-none'
-          );
-
-
-          /*
-            Confirm the first model loaded.
-          */
 
           modelContainer.addEventListener(
             'model-loaded',
-            function() {
-
-              currentModel = 'none';
-
-              console.log(
-                'Initial Blender model loaded.'
-              );
-
-            },
-            {
-              once: true
-            }
+            onLoaded
           );
 
 
-          /*
-            Handle initial model failure.
-          */
-
           modelContainer.addEventListener(
             'model-error',
-            function(event) {
-
-              console.error(
-                'Initial GLB failed to load:',
-                event
-              );
-
-            },
-            {
-              once: true
-            }
+            onError
           );
 
         }
       );
 
+    }
 
-      /* =====================================
-         VIDEO PLAYBACK
-      ====================================== */
 
-      window.addEventListener(
-        'click',
-        function() {
 
-          const video =
-            document.querySelector('#blender-video');
+    /* ==========================================
+       A-FRAME LOADED
+    ========================================== */
+
+    const scene =
+      document.querySelector('a-scene');
+
+
+    scene.addEventListener(
+      'loaded',
+      function() {
+
+        console.log(
+          'A-Frame loaded.'
+        );
+
+
+        /*
+         * Load the initial model.
+         */
+
+        modelContainer.setAttribute(
+          'gltf-model',
+          '#model-none'
+        );
+
+
+      }
+    );
+
+
+
+    /* ==========================================
+       MOBILE VIDEO
+    ========================================== */
+
+    const video =
+      document.querySelector(
+        '#blender-video'
+      );
+
+
+    /*
+     * iOS and Android browsers generally
+     * require video playback to begin from
+     * a user gesture.
+     */
+
+    document.addEventListener(
+      'touchstart',
+      function startVideo() {
+
+        if (
+          video &&
+          video.paused
+        ) {
+
+          video.play().catch(
+            function(error) {
+
+              console.log(
+                'Video waiting for user interaction.',
+                error
+              );
+
+            }
+          );
+
+        }
+
+
+        /*
+         * Only need the first gesture.
+         */
+
+        document.removeEventListener(
+          'touchstart',
+          startVideo
+        );
+
+      },
+      {
+        passive: true,
+        once: true
+      }
+    );
+
+
+    /*
+     * Also support desktop mouse.
+     */
+
+    document.addEventListener(
+      'click',
+      function() {
+
+        if (
+          video &&
+          video.paused
+        ) {
+
+          video.play().catch(
+            function(error) {
+
+              console.log(
+                'Video waiting for user interaction.',
+                error
+              );
+
+            }
+          );
+
+        }
+
+      }
+    );
+
+
+
+    /* ==========================================
+       iOS DEVICE ORIENTATION
+    ========================================== */
+
+    /*
+     * Newer iOS versions can require
+     * permission before accessing the
+     * gyroscope/orientation sensors.
+     */
+
+    async function requestMotionPermission() {
+
+      try {
+
+        if (
+          typeof DeviceOrientationEvent !==
+          'undefined' &&
+
+          typeof DeviceOrientationEvent
+            .requestPermission ===
+            'function'
+        ) {
+
+          const permission =
+            await DeviceOrientationEvent
+              .requestPermission();
 
 
           if (
-            video &&
-            video.paused
+            permission === 'granted'
           ) {
 
-            video.play().catch(
-              function(error) {
-
-                console.log(
-                  'Video playback requires user interaction.',
-                  error
-                );
-
-              }
+            console.log(
+              'Motion permission granted.'
             );
 
           }
 
         }
-      );
 
-    </script>
+      }
 
-  </body>
+      catch (error) {
+
+        console.log(
+          'Motion permission not available:',
+          error
+        );
+
+      }
+
+    }
+
+
+    /*
+     * Ask for motion permission after
+     * the user touches the screen.
+     */
+
+    document.addEventListener(
+      'touchend',
+      function() {
+
+        requestMotionPermission();
+
+      },
+      {
+        once: true
+      }
+    );
+
+  </script>
+
+</body>
+
 </html>
 ```
