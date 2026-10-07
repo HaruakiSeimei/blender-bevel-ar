@@ -2,94 +2,159 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <title>Blender Tutorial with Custom 3D Models</title>
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <script src="https://aframe.io"></script>
+    <title>Blender Bevel Tutorial - Interactive 3D WebAR</title>
+    <meta name="description" content="Interactive WebAR Blender Bevel Tutorial with dynamic buttons">
+    <!-- Loads A-Frame 3D Engine -->
+    <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
     <style>
-      #start-overlay {
-        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-        background: rgba(26, 37, 47, 0.95); z-index: 9999;
-        display: flex; flex-direction: column; justify-content: center; align-items: center;
-        color: white; font-family: sans-serif; text-align: center; cursor: pointer;
-      }
-      .play-btn {
-        background: #2ecc71; border: none; padding: 15px 40px;
-        font-size: 20px; font-weight: bold; color: white; border-radius: 30px; margin-top: 15px;
-      }
-      .button-container {
-        position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
-        z-index: 10; display: flex; gap: 10px;
+      /* Style overlay controls for mobile/desktop tapping */
+      .ui-container {
+        position: absolute;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        gap: 10px;
+        z-index: 999;
+        font-family: sans-serif;
       }
       .btn {
-        background: #2c3e50; color: white; border: 2px solid #34495e;
-        padding: 12px 20px; font-size: 16px; border-radius: 5px; cursor: pointer;
+        background: #2c3e50;
+        color: #fff;
+        border: 2px solid #34495e;
+        padding: 12px 20px;
+        font-size: 14px;
+        font-weight: bold;
+        border-radius: 8px;
+        cursor: pointer;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        transition: transform 0.1s, background 0.2s;
+        -webkit-tap-highlight-color: transparent;
+      }
+      .btn:active {
+        transform: scale(0.95);
+        background: #16a085;
+      }
+      .instruction-overlay {
+        position: absolute;
+        top: 15px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(0,0,0,0.7);
+        color: #fff;
+        padding: 8px 15px;
+        border-radius: 20px;
+        font-family: sans-serif;
+        font-size: 13px;
+        text-align: center;
+        z-index: 999;
+        pointer-events: none;
       }
     </style>
   </head>
   <body>
 
-    <div id="start-overlay" onclick="startExperience()">
-      <h2>Blender Bevel 3D Tutorial</h2>
-      <p>Tap anywhere to load the 3D models, video, and audio commentary!</p>
-      <button class="play-btn">START</button>
+    <!-- On-screen UI Instructions -->
+    <div class="instruction-overlay">
+      Tap screen to play video. Swipe or move phone to look around!
     </div>
 
-    <div class="button-container">
-      <button class="btn" onclick="changeBevel('none')">No Bevel</button>
-      <button class="btn" onclick="changeBevel('low')">Low Bevel</button>
-      <button class="btn" onclick="changeBevel('high')">High Bevel</button>
+    <!-- On-screen Interactive Buttons -->
+    <div class="ui-container">
+      <button class="btn" onclick="setBevel('none')">No Bevel</button>
+      <button class="btn" onclick="setBevel('low')">Low Bevel</button>
+      <button class="btn" onclick="setBevel('high')">High Bevel</button>
     </div>
 
     <a-scene>
+      <!-- Asset Preloading -->
       <a-assets>
+        <!-- Standard placeholder video asset; replace with your final .mp4 link -->
         <video id="blender-video" preload="none" loop playsinline webkit-playsinline src="Bevel Tool - Blender.mp4"></video>
-        
-        <!-- PRELOAD YOUR BLENDER GLB MODELS HERE -->
-        <a-asset-item id="model-none" src="no bevel.glb"></a-asset-item>
-        <a-asset-item id="model-low" src="low bevel.glb"></a-asset-item>
-        <a-asset-item id="model-high" src="high bevel.glb"></a-asset-item>
       </a-assets>
 
-      <a-sky color="#1a252f"></a-sky>
-      
-      
+      <!-- 3D Environment Background & Perspective Grid -->
+      <a-grid position="0 0 0" geometry="primitive: plane; width: 100; height: 100;" rotation="-90 0 0" material="src: url(https://cdn.aframe.io/a-grid/grid.png); repeat: 100 100;"></a-grid>
+      <a-sky color="#111c24"></a-sky>
 
-      <!-- Video Display Canvas -->
-      <a-video id="video-display" src="#blender-video" width="3" height="1.7" position="0 1.5 -3"></a-video>
+      <!-- Lighting Setup to showcase topology changes clearly -->
+      <a-entity light="type: ambient; color: #777"></a-entity>
+      <a-entity light="type: directional; color: #fff; intensity: 0.9" position="-2 3 2"></a-entity>
 
-      <!-- Target Dynamic Object Container (Loads None model by default) -->
-      <!-- Scale attribute adjusts size. Modify scale if your Blender model is too big/small -->
-      
+      <!-- ================= LEFT SIDE: FIXED SHARP CUBE ================= -->
+      <a-entity position="-2.8 1.5 -3" rotation="15 45 0">
+        <a-box width="1" height="1" depth="1" color="#e74c3c" roughness="0.4"></a-box>
+        <a-text value="Before
+(Sharp)" align="center" position="0 -0.8 0" width="3" color="#fff"></a-text>
+      </a-entity>
 
-      
+      <!-- ================= CENTER: VIDEO TUTORIAL SCREEN ================= -->
+      <a-video src="#blender-video" width="3" height="1.7" position="0 1.5 -3" rotation="0 0 0">
+        <a-text value="Blender Tutorial: How to Bevel" align="center" position="0 1.1 0" width="4" color="#fff"></a-text>
+        <a-text id="step-text" value="Interactive: Try the buttons below!" align="center" position="0 -1.1 0" width="3.5" color="#f1c40f"></a-text>
+      </a-video>
+
+      <!-- ================= RIGHT SIDE: DYNAMIC BEVELED SHAPE ================= -->
+      <a-entity id="interactive-target" position="2.8 1.5 -3" rotation="15 45 0">
+        <!-- Defaulting to a raw sharp box profile initially -->
+        <a-box id="cube-mesh" width="1" height="1" depth="1" color="#2ecc71" roughness="0.4"></a-box>
+        <a-text id="label-text" value="Interactive Model
+(No Bevel)" align="center" position="0 -0.8 0" width="3" color="#fff"></a-text>
+      </a-entity>
+
+      <!-- 3D Camera Controls -->
+      <a-entity camera look-controls wasd-controls position="0 1.6 0"></a-entity>
     </a-scene>
 
+    <!-- Interactive Behavior Script -->
     <script>
-      function startExperience() {
-        document.getElementById('start-overlay').style.display = 'none';
+      // Global screen tap fallback to bypass strict mobile autoplay rules
+      window.addEventListener('click', function () {
         var video = document.querySelector('#blender-video');
-        video.load();
-        
-        setTimeout(function() {
+        if (video && video.paused) {
           video.play();
-          var videoDisplay = document.querySelector('#video-display');
-          if (videoDisplay && videoDisplay.components.material) {
-             videoDisplay.components.material.material.map.image.play();
-          }
-        }, 150);
-      }
-
-      function changeBevel(type) {
-        var meshContainer = document.querySelector('#target-mesh');
-        
-        // Dynamically change the gltf-model attribute to swap Blender files
-        if (type === 'none') {
-          meshContainer.setAttribute('gltf-model', '#model-none');
-        } else if (type === 'low') {
-          meshContainer.setAttribute('gltf-model', '#model-low');
-        } else if (type === 'high') {
-          meshContainer.setAttribute('gltf-model', '#model-high');
         }
+      });
+
+      // Function triggered by HTML UI buttons to swap mesh data and update guide text
+      function setBevel(type) {
+        var targetContainer = document.querySelector('#interactive-target');
+        var oldMesh = document.querySelector('#cube-mesh');
+        var labelText = document.querySelector('#label-text');
+        var stepText = document.querySelector('#step-text');
+        
+        if (!targetContainer || !oldMesh) return;
+        
+        // Remove the existing 3D mesh object safely
+        targetContainer.removeChild(oldMesh);
+        
+        // Instantiate a completely new primitive matching the bevel level simulation
+        var newMesh = document.createElement('a-entity');
+        newMesh.setAttribute('id', 'cube-mesh');
+        
+        if (type === 'none') {
+          newMesh.setAttribute('geometry', 'primitive: box; width: 1; height: 1; depth: 1;');
+          newMesh.setAttribute('material', 'color: #2ecc71; roughness: 0.4');
+          labelText.setAttribute('value', 'Interactive Model\n(No Bevel)');
+          stepText.setAttribute('value', 'Step 1: Raw geometry selected.');
+        } 
+        else if (type === 'low') {
+          // Low resolution segments simulate a crisp, mechanical chamfer cut
+          newMesh.setAttribute('geometry', 'primitive: cylinder; segmentsRadial: 4; radius: 0.65; height: 1;');
+          newMesh.setAttribute('material', 'color: #3498db; roughness: 0.4');
+          labelText.setAttribute('value', 'Interactive Model\n(Low Bevel / Chamfer)');
+          stepText.setAttribute('value', 'Step 2: Ctrl + B applied (1 Segment).');
+        } 
+        else if (type === 'high') {
+          // High radial profile turns the primitive into a smoothly rounded corner block
+          newMesh.setAttribute('geometry', 'primitive: cylinder; segmentsRadial: 32; radius: 0.55; height: 1;');
+          newMesh.setAttribute('material', 'color: #9b59b6; roughness: 0.4');
+          labelText.setAttribute('value', 'Interactive Model\n(High Bevel / Smooth)');
+          stepText.setAttribute('value', 'Step 3: Mouse scrolled up (Multiple Segments!).');
+        }
+        
+        // Inject the newly calculated mesh block back into our tracked scene target
+        targetContainer.appendChild(newMesh);
       }
     </script>
   </body>
