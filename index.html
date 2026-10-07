@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html>
   <head>
     <meta charset="utf-8">
@@ -95,7 +96,6 @@
       <a-assets>
         <!-- Standard placeholder video asset; replace with your final .mp4 link -->
         <video id="blender-video" preload="none" loop playsinline webkit-playsinline src="Bevel Tool - Blender.mp4"></video>
-        <video id="blender-video" preload="none" loop playsinline webkit-playsinline src="tutorial.mp4"></video>
         
         <!-- PRELOAD YOUR BLENDER GLB MODELS HERE -->
         <a-asset-item id="model-none" src="cube_none.glb"></a-asset-item>
@@ -105,10 +105,6 @@
 
       <!-- 3D Environment Background & Perspective Grid -->
       <a-grid position="0 0 0" geometry="primitive: plane; width: 100; height: 100;" rotation="-90 0 0" material="src: url(https://cdn.aframe.io/a-grid/grid.png); repeat: 100 100;"></a-grid>
-      <a-sky color="#111c24"></a-sky>
-      <a-sky color="#1a252f"></a-sky>
-      
-      
 
       <!-- Lighting Setup to showcase topology changes clearly -->
       <a-entity light="type: ambient; color: #777"></a-entity>
@@ -216,4 +212,3 @@
       }
     </script>
   </body>
-    </html>
