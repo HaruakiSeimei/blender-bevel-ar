@@ -685,7 +685,7 @@
         magicWindowTrackingEnabled: true;
       "
 
-      wasd-controls="enabled: false"
+      wasd-controls="enabled: true"
 
       position="0 1.6 0"
 
@@ -702,6 +702,29 @@
   ========================================== -->
 
   <script>
+
+      const video = document.getElementById('camera-background');
+
+        // Request permission and stream the camera
+        async function startCamera() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: { 
+                        // 'environment' requests the back camera on phones. 
+                        // Use 'user' for the front/selfie camera.
+                        facingMode: 'environment' 
+                    }, 
+                    audio: false 
+                });
+                video.srcObject = stream;
+            } catch (err) {
+                console.error("Error accessing the camera: ", err);
+                alert("Could not access the camera. Make sure you grant permission and are using HTTPS.");
+            }
+        }
+
+        // Initialize camera on page load
+        window.addEventListener('DOMContentLoaded', startCamera);
 
 
     /* ==========================================
